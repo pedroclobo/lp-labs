@@ -24,14 +24,12 @@ Fixpoint remove_last {T : Type} (l : list T) : list T :=
 Compute (remove_last ([1;2;3])).
 
 (* 2.3 *)
-Definition first_n {T : Type} (n : nat) (l : list T) : list T :=
-  let fix aux {T : Type} (n : nat) (l : list T) (acc : list T) : list T :=
-    match n, l with
-    | 0, _ => acc
-    | _, [] => acc
-    | _, h :: t => aux (n - 1) t (app acc [h])
-    end
-  in aux n l [].
+Fixpoint first_n {T : Type} (n : nat) (l : list T) : list T :=
+  match n, l with
+  | 0, _ => []
+  | _, [] => []
+  | _, h :: t => app [h] (first_n (n - 1) t)
+  end.
 
 Compute (first_n 2 [1;2;3]).
 
@@ -82,13 +80,11 @@ Fixpoint append {T:Type} (l1 : list T) (l2 : list T) : list T :=
 Compute (append [1;2;3] [4;5;6]).
 
 (* 2.7 *)
-Definition my_split {T1 T2 : Type} (p : list (T1 * T2)) :=
-  let fix aux {T1 T2 : Type} (p : list (T1 * T2)) (acc : (list T1) * (list T2)) :=
-    match p with
-    | [] => acc
-    | (p11, p12) :: rest => aux rest (append (fst acc) [p11], append (snd acc) [p12])
-    end
-  in aux p ([], []).
+Fixpoint my_split {T1 T2 : Type} (p : list (T1 * T2)) :=
+  match p with
+  | [] => ([], [])
+  | (a, b) :: rest => (a :: fst(my_split rest), b :: snd(my_split rest))
+  end.
 
 Compute (my_split [(1, 2); (3, 4); (5, 6)]).
 Compute (my_split [(1,true); (2,false); (3,true)]).
@@ -131,27 +127,21 @@ Compute (find (fun e => e <=? 3) [6;4;1;3;7]).
 Compute (find (fun e => e <=? 3) [6;4;4;5;7]).
 
 (* 2.13 *)
-Definition partition {X : Type} (p : X -> bool) (l : list X) : (list X * list X) :=
-  let fix aux {X : Type} (p : X -> bool) (l : list X) (acc : (list X * list X)) : (list X * list X) :=
-    match l with
-    | [] => acc
-    | h :: t => aux p t
-      (if p h then
-        (append (fst acc) [h], snd acc)
-      else
-        (fst acc, append (snd acc) [h]))
-    end
-  in
-  aux p l ([], []).
+Fixpoint partition {X : Type} (p : X -> bool) (l : list X) : (list X * list X) :=
+  match l with
+  | [] => ([], [])
+  | h :: t => let (e, d) := partition p t
+              in if p h then (h::e, d) else (e, h::d)
+  end.
 
 Compute (partition (fun e => e <=? 3) [6;4;1;3;7]).
 
 (* 2.14 *)
-Fixpoint list_prod_aux {T1 T2 : Type} (l1 : list T1) (l2 : list T2) (acc : list (T1 * T2)): list (T1 * T2) :=
-  match l1, l2 with
-  | [], [] | [], _ | _, [] => acc
-  | h1 :: t1, h2 :: t2 => list_prod_aux t1 l2 (append acc [(h1, h2)])
+Fixpoint my_list_prod {T1 T2 : Type} (l1 : list T1) (l2 : list T2) : list (T1 * T2) :=
+  match l1 with
+  | [] => []
+  | h :: r => map (fun e => (h, e)) l2 ++ my_list_prod r l2
   end.
 
-Compute (list_prod [1; 2] [true; false]).
-Compute (list_prod [1; 2; 3] [true; false; true]).
+Compute (my_list_prod [1; 2] [true; false]).
+Compute (my_list_prod [1; 2; 3] [true; false; true]).
