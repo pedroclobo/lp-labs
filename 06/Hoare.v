@@ -105,17 +105,30 @@ Definition Assertion := state -> Prop.
     Paraphrase the following assertions in English (or your favorite
     natural language). *)
 
-(* TODO: write simplified assertions as comments *)
 Module ExAssertions.
+
+(* Holds for states in which the value of [X] is less
+   than or equal to the value of [Y]. *)
 Definition assertion1 : Assertion := fun st => st X <= st Y.
+
+(* Holds for states in which the value of [X] is [3]
+   or less than or equal to the value of [Y]. *)
 Definition assertion2 : Assertion :=
   fun st => st X = 3 \/ st X <= st Y.
+
+(* Holds for states in which the value of [Z] squared is
+   less than or equal to the value of [X] and the value
+   of [Z] + 1 squared is not less than or equal to the
+   value of [X]. *)
 Definition assertion3 : Assertion :=
   fun st => st Z * st Z <= st X /\
             ~ (((S (st Z)) * (S (st Z))) <= st X).
+
+(* Holds for states in which the value of [Z] is the maximum
+   between the values of [X] and [Y]. *)
 Definition assertion4 : Assertion :=
   fun st => st Z = max (st X) (st Y).
-(* FILL IN HERE *)
+
 End ExAssertions.
 (** [] *)
 
@@ -277,64 +290,76 @@ End ExamplePrettyAssertions.
       reference to the _Coq_ variable [m], which is bound outside the
       Hoare triple. *)
 
-(* TODO *)
 (** **** Exercise: 1 star, standard, optional (triples)
 
     Paraphrase the following in English.
 
+     Command c transforms any state in a state where [X = 5].
      1) {{True}} c {{X = 5}}
 
+     For any choice of m, command c transforms any state where
+     X = m to a state where [X = m + 5].
      2) forall m, {{X = m}} c {{X = m + 5)}}
 
+     Command c transforms any state where [X <= Y] in any state
+     where [Y <= X].
      3) {{X <= Y}} c {{Y <= X}}
 
+     Command c transforms any state into a (non-existent).
      4) {{True}} c {{False}}
 
+     For any choice of m, command c transforms any state where
+     [X = m] in any state where [Y = real_fact m].
      5) forall m,
           {{X = m}}
           c
           {{Y = real_fact m}}
 
+     For any choice of m, command c transforms any state where
+     [X = m] in any state where
+     [Z * Z <= m] and [~ (((S Z) * (S Z)) <= m)].
      6) forall m,
           {{X = m}}
           c
           {{(Z * Z) <= m /\ ~ (((S Z) * (S Z)) <= m)}}
 *)
-(* FILL IN HERE
 
-    [] *)
-
-(* TODO *)
 (** **** Exercise: 1 star, standard, optional (valid_triples)
 
     Which of the following Hoare triples are _valid_ -- i.e., the
     claimed relation between [P], [c], and [Q] is true?
 
    1) {{True}} X := 5 {{X = 5}}
+   Valid
 
    2) {{X = 2}} X := X + 1 {{X = 3}}
+   Valid
 
    3) {{True}} X := 5; Y := 0 {{X = 5}}
+   Valid
 
    4) {{X = 2 /\ X = 3}} X := 5 {{X = 0}}
+   Invalid
 
    5) {{True}} skip {{False}}
+   Invalid
 
    6) {{False}} skip {{True}}
+   Valid (vacuously true)
 
    7) {{True}} while true do skip end {{False}}
+   Invalid
 
    8) {{X = 0}}
         while X = 0 do X := X + 1 end
       {{X = 1}}
+   Valid
 
    9) {{X = 1}}
         while X <> 0 do X := X + 1 end
       {{X = 100}}
+   Invalid
 *)
-(* FILL IN HERE
-
-    [] *)
 
 (* ################################################################# *)
 (** * Hoare Triples, Formally *)
@@ -353,7 +378,7 @@ Notation "{{ P }} c {{ Q }}" :=
     (at level 90, c custom com at level 99)
     : hoare_spec_scope.
 
-(* TODO: valid or invalid? *)
+(* The tuple is valid as the postcondition is True *)
 Check ({{True}} X := 0 {{True}}).
 
 (** **** Exercise: 1 star, standard (hoare_post_true) *)
@@ -365,8 +390,9 @@ Theorem hoare_post_true : forall (P Q : Assertion) c,
   (forall st, Q st) ->
   {{P}} c {{Q}}.
 Proof.
-  (* TODO *)
-  (* FILL IN HERE *) Admitted.
+  intros. unfold valid_hoare_triple.
+  intros st st' H1 H2. apply H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (hoare_pre_false) *)
@@ -378,8 +404,9 @@ Theorem hoare_pre_false : forall (P Q : Assertion) c,
   (forall st, ~ (P st)) ->
   {{P}} c {{Q}}.
 Proof.
-  (* TODO *)
-  (* FILL IN HERE *) Admitted.
+  intros. unfold valid_hoare_triple.
+  intros st st' H1 H2. apply H in H2. contradiction.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -561,14 +588,12 @@ Definition assertion_sub X a (P:Assertion) : Assertion :=
 Notation "P [ X |-> a ]" := (assertion_sub X a P)
   (at level 10, X at next level, a custom com) : hoare_spec_scope.
 
-  
-(* TODO: *)
+
 (* [(X <= 5) [X |-> 3]]*)
 Definition a1 := (X <= 5)%assertion.
 Compute a1 (X !-> 4).
 Definition a2 := a1 [X |-> 3].
 Compute a2 (X !-> 4).
-(* END OF TODO *)
 
 
 
@@ -668,8 +693,8 @@ Example hoare_asgn_examples1 :
       X := 2 * X
     {{ X <= 10 }}.
 Proof.
-  (* TODO *)
-  (* FILL IN HERE *) Admitted.
+  eexists. apply hoare_asgn.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (hoare_asgn_examples2) *)
@@ -678,9 +703,9 @@ Example hoare_asgn_examples2 :
     {{ P }}
       X := 3
     {{ 0 <=  X /\ X <= 5 }}.
-Proof. 
-  (* TODO *) 
-  (* FILL IN HERE *) Admitted.
+Proof.
+  eexists. apply hoare_asgn.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, especially useful (hoare_asgn_wrong)
@@ -699,17 +724,18 @@ Proof.
     arithmetic expression [a], and your counterexample needs to
     exhibit an [a] for which the rule doesn't work.) *)
 
-(*TODO*)
-
 Theorem hoare_asgn_wrong : exists a:aexp,
   ~ {{ True }} X := a {{ X = a }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(* FILL IN HERE
+  exists <{ X + 1 }>.
+  unfold valid_hoare_triple, not.
+  intros. specialize (H empty_st (X !-> 1)).
+  simpl in H. rewrite t_update_eq in H.
+  discriminate H.
+  - repeat constructor.
+  - trivial.
+Qed.
 
-    [] *)
-
-(* TODO *)
 (** **** Exercise: 3 stars, advanced (hoare_asgn_fwd)
 
     By using a _parameter_ [m] (a Coq number) to remember the
@@ -736,8 +762,14 @@ Theorem hoare_asgn_fwd :
   {{fun st => P (X !-> m ; st)
            /\ st X = aeval (X !-> m ; st) a }}.
 Proof.
-  (* TODO *)
-  (* FILL IN HERE *) Admitted.
+  intros.
+  unfold valid_hoare_triple.
+  intros st st' H1 H2.
+  split; inversion H1; inversion H2; subst;
+  rewrite t_update_shadow; rewrite t_update_same.
+  - assumption.
+  - rewrite t_update_eq. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced, optional (hoare_asgn_fwd_exists)
@@ -760,25 +792,33 @@ Theorem hoare_asgn_fwd_exists :
   {{fun st => exists m, P (X !-> m ; st) /\
                 st X = aeval (X !-> m ; st) a }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  unfold valid_hoare_triple.
+  intros st st' H1 H2.
+  eexists. inversion H1; subst.
+  split; rewrite t_update_shadow; rewrite t_update_same.
+  - assumption.
+  - rewrite t_update_eq. reflexivity.
+Qed.
 (** [] *)
 
 
-(* TODO *)
 Theorem conseqtest1: forall X,
 {{(X = 3) [X |-> 3]}} X := 3 {{X = 3}}.
 Proof.
   intros.
   apply hoare_asgn.
 Qed.
-  
+
 Theorem conseqtest2: forall X,
 {{True}} X := 3 {{X = 3}}.
 Proof.
-  intros. 
-  Fail apply hoare_asgn.
-Abort.
-(* END OF TODO *)
+  intros.
+  unfold valid_hoare_triple.
+  intros st st' H1 H2.
+  inversion H1; subst.
+  simpl. rewrite t_update_eq. reflexivity.
+Qed.
 
 
 (* ================================================================= *)
@@ -1111,16 +1151,20 @@ Example assertion_sub_ex1' :
     X := 2 * X
   {{ X <= 10 }}.
 Proof.
-  (* TODO *)
-  (* FILL IN HERE *) Admitted.
+  eapply hoare_consequence_pre.
+  - apply hoare_asgn.
+  - assertion_auto.
+Qed.
 
 Example assertion_sub_ex2' :
   {{ 0 <= 3 /\ 3 <= 5 }}
     X := 3
   {{ 0 <= X /\ X <= 5 }}.
 Proof.
-  (* TODO *)
-  (* FILL IN HERE *) Admitted.
+  eapply hoare_consequence_pre.
+  - apply hoare_asgn.
+  - assertion_auto.
+Qed.
 
 (** [] *)
 
@@ -1184,12 +1228,14 @@ Example hoare_asgn_example4 :
   {{ X = 1 /\ Y = 2 }}.
 Proof.
   eapply hoare_seq with (Q := (X = 1)%assertion).
-  (* The annotation [%assertion] is needed to help Coq parse correctly. *)
-  (* TODO *)
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  - eapply hoare_consequence_pre.
+    -- apply hoare_asgn.
+    -- assertion_auto.
+  - eapply hoare_consequence_pre.
+    -- apply hoare_asgn.
+    -- assertion_auto.
+Qed.
 
-(* TODO *)
 (** **** Exercise: 3 stars, standard (swap_exercise)
 
     Write an Imp program [c] that swaps the values of [X] and [Y] and
@@ -1208,16 +1254,21 @@ Proof.
          and work back to the beginning of your program.
        - Remember that [eapply] is your friend.)  *)
 
-Definition swap_program : com
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition swap_program : com := <{Z := X; X := Y; Y := Z}>.
 
 Theorem swap_exercise :
   {{X <= Y}}
     swap_program
   {{Y <= X}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  eapply hoare_seq.
+  - eapply hoare_seq.
+    -- eapply hoare_asgn.
+    -- eapply hoare_asgn.
+  - eapply hoare_consequence_pre.
+    -- eapply hoare_asgn.
+    -- assertion_auto.
+Qed.
 
 (** **** Exercise: 4 stars, advanced (invalid_triple)
 
@@ -1451,9 +1502,14 @@ Theorem if_minus_plus :
     end
   {{Y = X + Z}}.
 Proof.
-  (* TODO *)
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  apply hoare_if.
+  - eapply hoare_consequence_pre.
+    -- eapply hoare_asgn.
+    -- assertion_auto''.
+  - eapply hoare_consequence_pre.
+    -- eapply hoare_asgn.
+    -- assertion_auto''.
+Qed.
 
 (* ----------------------------------------------------------------- *)
 (** *** Exercise: One-sided conditionals *)
