@@ -195,15 +195,15 @@ These decorations can be constructed as follows:
 (*
   {{ True }}
     if X <= Y then
-              {{                         }} ->>
-              {{                         }}
+              {{ True /\ X <= Y          }} ->>
+              {{ Y = X + (Y - X)         }}
       Z := Y - X
-              {{                         }}
+              {{ Y = X + Z               }}
     else
-              {{                         }} ->>
-              {{                         }}
+              {{ True /\ ~(X <= Y)       }} ->>
+              {{ X + Z := X + Z          }}
       Y := X + Z
-              {{                         }}
+              {{ Y = X + Z               }}
     end
   {{ Y = X + Z }}
 *)
